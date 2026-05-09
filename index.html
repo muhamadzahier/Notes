@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A4 Notes Workspace</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Home Screen: Note Library -->
+    <div id="home-screen" class="screen active">
+        <header>
+            <h1>Workspace</h1>
+            <button id="btn-create-new" class="primary-btn">Create Document</button>
+        </header>
+        <main>
+            <ul id="notes-list"></ul>
+        </main>
+    </div>
+
+    <!-- Editor Screen: Multi-Page Canvas -->
+    <div id="editor-screen" class="screen">
+        <header class="editor-header">
+            <button id="btn-back">Library</button>
+            <div class="tools">
+                <button id="btn-toggle-menu" class="tool-btn">Settings</button>
+            </div>
+            <button id="btn-save" class="primary-btn">Save Note</button>
+        </header>
+        
+        <div class="editor-body">
+            
+            <!-- Floating Navigation Toolbar (Docks to bottom on mobile) -->
+            <div id="floating-toolbar" class="floating-toolbar">
+                <div class="tool-group">
+                    <button id="btn-pen" class="float-tool-btn active">Pen</button>
+                    <div class="tool-popout">
+                        <label for="pen-size-slider">Size</label>
+                        <input type="range" id="pen-size-slider" min="1" max="20" value="2">
+                    </div>
+                </div>
+                
+                <div class="tool-group">
+                    <button id="btn-eraser" class="float-tool-btn">Eraser</button>
+                    <div class="tool-popout">
+                        <label for="eraser-size-slider">Size</label>
+                        <input type="range" id="eraser-size-slider" min="10" max="100" value="35">
+                    </div>
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <!-- Dynamic Color Palette Injected via JS -->
+                <div id="color-palette" class="color-palette"></div>
+            </div>
+
+            <!-- Scrollable Area for Pages -->
+            <main class="editor-main" id="pages-scroll-area">
+                <div id="pages-container" class="layout-vertical">
+                    <!-- Canvases injected dynamically via JS -->
+                </div>
+            </main>
+
+            <!-- Settings Sidebar -->
+            <aside id="layout-sidebar" class="sidebar">
+                <div class="sidebar-header">
+                    <h3>Document Settings</h3>
+                    <button id="btn-close-menu" class="close-btn">Close</button>
+                </div>
+
+                <div class="sidebar-section">
+                    <label for="toggle-pen-mode">Tablet Palm Rejection</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="toggle-pen-mode">
+                        <label for="toggle-pen-mode" style="display:inline; font-weight:normal;">Strict Stylus/Pen Mode</label>
+                    </div>
+                    <p class="sidebar-info" style="padding:0; margin-top:0.5rem;">If checked, fingers will scroll the page and only a stylus will draw.</p>
+                </div>
+                
+                <div class="sidebar-section">
+                    <label for="layout-select">View Layout</label>
+                    <select id="layout-select">
+                        <option value="layout-vertical">Continuous Vertical</option>
+                        <option value="layout-horizontal">Continuous Horizontal</option>
+                        <option value="layout-side-by-side">Side by Side (Grid)</option>
+                    </select>
+                </div>
+
+                <div class="sidebar-section">
+                    <label>Page Management</label>
+                    <button id="btn-add-page-before" class="secondary-btn">Add Page Before</button>
+                    <button id="btn-add-page-after" class="secondary-btn">Add Page After</button>
+                    <button id="btn-delete-page" class="danger-btn">Delete Active Page</button>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="lib/db.js"></script>
+    <script src="lib/palm.js"></script>
+    <script src="cmp/canvas.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
