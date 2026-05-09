@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pagesContainer = document.getElementById('pages-container');
     const layoutSidebar = document.getElementById('layout-sidebar');
     const colorPaletteContainer = document.getElementById('color-palette');
+    const editorScrollArea = document.getElementById('pages-scroll-area');
     
     // Header & Sidebar Tools
     const btnCreateNew = document.getElementById('btn-create-new');
@@ -19,17 +20,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnAddAfter = document.getElementById('btn-add-page-after');
     const btnDeletePage = document.getElementById('btn-delete-page');
 
-    // Floating Tools
+    // Floating Tools & Zoom
     const btnPen = document.getElementById('btn-pen');
     const btnEraser = document.getElementById('btn-eraser');
     const penSizeSlider = document.getElementById('pen-size-slider');
     const eraserSizeSlider = document.getElementById('eraser-size-slider');
+    const btnZoomIn = document.getElementById('btn-zoom-in');
+    const btnZoomOut = document.getElementById('btn-zoom-out');
+    const zoomDisplay = document.getElementById('zoom-level-display');
 
     // App State
     let currentNoteId = null;
     let canvasInstances = [];
     let currentTool = 'pen';
     let activePageIndex = 0;
+    
+    // Zoom State
+    let currentZoomLevel = 1;
+    const MIN_ZOOM = 0.5;
+    const MAX_ZOOM = 3.0;
     
     // Dynamic Tool Properties
     let currentPenSize = parseInt(penSizeSlider.value);
@@ -120,6 +129,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     penSizeSlider.addEventListener('input', (e) => updateGlobalPenSize(parseInt(e.target.value)));
     eraserSizeSlider.addEventListener('input', (e) => updateGlobalEraserSize(parseInt(e.target.value)));
 
+    // -- Zoom Logic (Buttons & Pinch) --
+    function setZoom(level) {
+        currentZoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, level));
+        document.documentElement.style.setProperty('--zoom-level', currentZoomLevel);
+        zoomDisplay.textContent = Math.round(currentZoomLevel * 100) + '%';
+    }
+
+    btnZoomIn.addEventListener('click', () => setZoom(currentZoomLevel + 0.25));
+    btnZoomOut.addEventListener('click', () => setZoom(currentZoomLevel - 0.25));
+    zoomDisplay.addEventListener('click', () => setZoom(1)); // Click % to reset
+
+    let initialPinchDistance = null;
+    let initialZoomState = 1;
+
+    editorScrollArea.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            initialPinchDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            initialZoomState = currentZoomLevel;
+        }
+    }, { passive: true });
+
+    editorScrollArea.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initialPinchDistance > 0) {
+            e.preventDefault(); // Stop native page scaling
+            const currentDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const scaleChange = currentDistance / initialPinchDistance;
+            setZoom(initialZoomState * scaleChange);
+        }
+    }, { passive: false });
+
+    editorScrollArea.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) initialPinchDistance = null;
+    });
+
     // -- Screen Navigation --
     function showEditor(noteId = null) {
         currentNoteId = noteId;
@@ -129,6 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             clearPages();
             createPage(null);
         }
+        setZoom(1); // Reset zoom on open
     }
 
     function showHome() {
@@ -183,7 +233,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         updatePageNumbers();
         setActivePage(wrapper);
         
-        // Scroll newly added page into view
         wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 

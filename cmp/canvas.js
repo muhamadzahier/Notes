@@ -4,7 +4,6 @@ class CanvasComponent {
         this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
         this.isDrawing = false;
         
-        // Dynamic Properties
         this.mode = 'pen'; 
         this.penSize = 2;
         this.eraserSize = 35;
@@ -41,7 +40,6 @@ class CanvasComponent {
         return this.canvas.toDataURL('image/png');
     }
 
-    // Accurately maps PointerEvent coordinates to internal 794x1123 canvas resolution
     getScaledCoordinates(e) {
         const rect = this.canvas.getBoundingClientRect();
         const scaleX = this.canvas.width / rect.width;
@@ -54,11 +52,15 @@ class CanvasComponent {
     }
 
     bindEvents() {
-        // We use unified PointerEvents for mouse, touch, and pen.
         const startPosition = (e) => {
             if (!PalmRejection.isValidInput(e)) return;
             
-            // Lock drawing to this specific finger/pen to prevent multi-touch drawing chaos
+            // Abort drawing if a second finger touches (user is trying to pinch-zoom)
+            if (e.pointerType === 'touch' && !e.isPrimary) {
+                this.isDrawing = false;
+                return;
+            }
+            
             this.activePointerId = e.pointerId;
             this.isDrawing = true;
             this.canvas.setPointerCapture(e.pointerId);
@@ -111,11 +113,6 @@ class CanvasComponent {
         this.canvas.addEventListener('pointerout', endPosition);
     }
 
-    /**
-     * Modifies CSS touch-action.
-     * If Strict Pen mode is ON, we allow fingers to pan the screen (touch-action: pan-y pan-x).
-     * If OFF, fingers are used for drawing, so we must prevent scrolling (touch-action: none).
-     */
     setTouchActionBehavior(strictPenMode) {
         this.canvas.style.touchAction = strictPenMode ? 'pan-x pan-y' : 'none';
     }

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>A4 Notes Workspace</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -30,28 +30,45 @@
         
         <div class="editor-body">
             
-            <!-- Floating Navigation Toolbar (Docks to bottom on mobile) -->
+            <!-- Floating Navigation Toolbar -->
             <div id="floating-toolbar" class="floating-toolbar">
-                <div class="tool-group">
-                    <button id="btn-pen" class="float-tool-btn active">Pen</button>
-                    <div class="tool-popout">
-                        <label for="pen-size-slider">Size</label>
-                        <input type="range" id="pen-size-slider" min="1" max="20" value="2">
-                    </div>
-                </div>
                 
-                <div class="tool-group">
-                    <button id="btn-eraser" class="float-tool-btn">Eraser</button>
-                    <div class="tool-popout">
-                        <label for="eraser-size-slider">Size</label>
-                        <input type="range" id="eraser-size-slider" min="10" max="100" value="35">
-                    </div>
+                <!-- 1. VIEW SECTION (Zoom controls separated at the top) -->
+                <div class="toolbar-section">
+                    <span class="section-label">View</span>
+                    <button id="btn-zoom-in" class="float-tool-btn">+</button>
+                    <span id="zoom-level-display">100%</span>
+                    <button id="btn-zoom-out" class="float-tool-btn">-</button>
                 </div>
 
                 <div class="toolbar-divider"></div>
 
-                <!-- Dynamic Color Palette Injected via JS -->
-                <div id="color-palette" class="color-palette"></div>
+                <!-- 2. DRAW SECTION (Tools and Colors) -->
+                <div class="toolbar-section">
+                    <span class="section-label">Draw</span>
+                    
+                    <div class="tool-group">
+                        <button id="btn-pen" class="float-tool-btn active">Pen</button>
+                        <!-- Vertical Popout for Size -->
+                        <div class="tool-popout vertical-popout">
+                            <label for="pen-size-slider">Size</label>
+                            <input type="range" id="pen-size-slider" min="1" max="20" value="2" orient="vertical">
+                        </div>
+                    </div>
+                    
+                    <div class="tool-group">
+                        <button id="btn-eraser" class="float-tool-btn">Eraser</button>
+                        <!-- Vertical Popout for Size -->
+                        <div class="tool-popout vertical-popout">
+                            <label for="eraser-size-slider">Size</label>
+                            <input type="range" id="eraser-size-slider" min="10" max="100" value="35" orient="vertical">
+                        </div>
+                    </div>
+                    
+                    <!-- Dynamic Color Palette -->
+                    <div id="color-palette" class="color-palette"></div>
+                </div>
+
             </div>
 
             <!-- Scrollable Area for Pages -->
@@ -72,9 +89,9 @@
                     <label for="toggle-pen-mode">Tablet Palm Rejection</label>
                     <div class="checkbox-group">
                         <input type="checkbox" id="toggle-pen-mode">
-                        <label for="toggle-pen-mode" style="display:inline; font-weight:normal;">Strict Stylus/Pen Mode</label>
+                        <label for="toggle-pen-mode" style="display:inline; font-weight:normal;">Strict Stylus Mode</label>
                     </div>
-                    <p class="sidebar-info" style="padding:0; margin-top:0.5rem;">If checked, fingers will scroll the page and only a stylus will draw.</p>
+                    <p class="sidebar-info" style="padding:0; margin-top:0.5rem;">Check this to scroll with fingers and draw only with a stylus.</p>
                 </div>
                 
                 <div class="sidebar-section">
