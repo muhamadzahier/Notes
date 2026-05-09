@@ -37,8 +37,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Zoom State
     let currentZoomLevel = 1;
-    const MIN_ZOOM = 0.5;
-    const MAX_ZOOM = 3.0;
+    const MIN_ZOOM = 0.3;
+    const MAX_ZOOM = 4.0;
     
     // Dynamic Tool Properties
     let currentPenSize = parseInt(penSizeSlider.value);
@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const paletteColors = ['#000000', '#ef4444', '#3b82f6', '#22c55e', '#eab308'];
     const swatchElements = [];
 
-    // Init Application
     initColorPalette();
     await NotesDB.init();
     renderNotesList();
@@ -59,12 +58,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     togglePenMode.addEventListener('change', (e) => {
         isStrictPenMode = e.target.checked;
         PalmRejection.setStrictPenMode(isStrictPenMode);
-        canvasInstances.forEach(cmp => cmp.setTouchActionBehavior(isStrictPenMode));
     });
 
     function initColorPalette() {
         colorPaletteContainer.innerHTML = '';
-        
         paletteColors.forEach((color, index) => {
             const swatch = document.createElement('div');
             swatch.className = 'color-swatch';
@@ -100,27 +97,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentPenColor = color;
         canvasInstances.forEach(cmp => cmp.setPenColor(color));
     }
-
     function updateGlobalPenSize(size) {
         currentPenSize = size;
         canvasInstances.forEach(cmp => cmp.setPenSize(size));
     }
-
     function updateGlobalEraserSize(size) {
         currentEraserSize = size;
         canvasInstances.forEach(cmp => cmp.setEraserSize(size));
     }
-
     function updateGlobalTool(tool) {
         currentTool = tool;
         canvasInstances.forEach(cmp => cmp.setMode(tool));
-        
         if (tool === 'pen') {
-            btnPen.classList.add('active');
-            btnEraser.classList.remove('active');
+            btnPen.classList.add('active'); btnEraser.classList.remove('active');
         } else {
-            btnEraser.classList.add('active');
-            btnPen.classList.remove('active');
+            btnEraser.classList.add('active'); btnPen.classList.remove('active');
         }
     }
 
@@ -129,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     penSizeSlider.addEventListener('input', (e) => updateGlobalPenSize(parseInt(e.target.value)));
     eraserSizeSlider.addEventListener('input', (e) => updateGlobalEraserSize(parseInt(e.target.value)));
 
-    // -- Zoom Logic (Buttons & Pinch) --
+    // -- Flawless Pinch-to-Zoom & Pan Logic --
     function setZoom(level) {
         currentZoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, level));
         document.documentElement.style.setProperty('--zoom-level', currentZoomLevel);
@@ -138,10 +129,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnZoomIn.addEventListener('click', () => setZoom(currentZoomLevel + 0.25));
     btnZoomOut.addEventListener('click', () => setZoom(currentZoomLevel - 0.25));
-    zoomDisplay.addEventListener('click', () => setZoom(1)); // Click % to reset
+    zoomDisplay.addEventListener('click', () => setZoom(1)); 
 
     let initialPinchDistance = null;
     let initialZoomState = 1;
+    let lastMidPoint = null;
 
     editorScrollArea.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
@@ -150,26 +142,43 @@ document.addEventListener('DOMContentLoaded', async () => {
                 e.touches[0].clientY - e.touches[1].clientY
             );
             initialZoomState = currentZoomLevel;
+            lastMidPoint = {
+                x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+                y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+            };
         }
     }, { passive: true });
 
     editorScrollArea.addEventListener('touchmove', (e) => {
         if (e.touches.length === 2 && initialPinchDistance > 0) {
-            e.preventDefault(); // Stop native page scaling
-            const currentDistance = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
+            e.preventDefault(); // Kills browser scale
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+
+            // 1. Scale
+            const currentDistance = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
             const scaleChange = currentDistance / initialPinchDistance;
             setZoom(initialZoomState * scaleChange);
+
+            // 2. Multi-finger Pan Support
+            const currentMidX = (touch1.clientX + touch2.clientX) / 2;
+            const currentMidY = (touch1.clientY + touch2.clientY) / 2;
+            if (lastMidPoint) {
+                editorScrollArea.scrollLeft -= (currentMidX - lastMidPoint.x);
+                editorScrollArea.scrollTop -= (currentMidY - lastMidPoint.y);
+            }
+            lastMidPoint = { x: currentMidX, y: currentMidY };
         }
     }, { passive: false });
 
     editorScrollArea.addEventListener('touchend', (e) => {
-        if (e.touches.length < 2) initialPinchDistance = null;
+        if (e.touches.length < 2) {
+            initialPinchDistance = null;
+            lastMidPoint = null;
+        }
     });
 
-    // -- Screen Navigation --
+    // -- Screen Navigation & Page Generation --
     function showEditor(noteId = null) {
         currentNoteId = noteId;
         homeScreen.classList.remove('active');
@@ -178,7 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             clearPages();
             createPage(null);
         }
-        setZoom(1); // Reset zoom on open
+        setZoom(1); 
     }
 
     function showHome() {
@@ -190,7 +199,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderNotesList();
     }
 
-    // -- Page Management --
     function clearPages() {
         pagesContainer.innerHTML = '';
         canvasInstances = [];
@@ -225,15 +233,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         cmp.setPenColor(currentPenColor);
         cmp.setPenSize(currentPenSize);
         cmp.setEraserSize(currentEraserSize);
-        cmp.setTouchActionBehavior(isStrictPenMode);
         
         if (dataURL) cmp.loadFromDataURL(dataURL);
 
         canvasInstances.splice(insertIndex, 0, cmp);
         updatePageNumbers();
         setActivePage(wrapper);
-        
-        wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function updatePageNumbers() {
@@ -251,7 +256,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         activePageIndex = parseInt(wrapperElement.dataset.index);
     }
 
-    // -- Render Library --
     async function renderNotesList() {
         notesList.innerHTML = '';
         const notes = await NotesDB.getAllNotes();

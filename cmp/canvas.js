@@ -2,7 +2,14 @@ class CanvasComponent {
     constructor(canvasElement) {
         this.canvas = canvasElement;
         this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+        
+        // Block all native gestures from the browser to fix Jitter
+        this.canvas.style.touchAction = 'none'; 
+        
         this.isDrawing = false;
+        this.isPanning = false;
+        this.lastPanPoint = null;
+        this.scrollArea = document.getElementById('pages-scroll-area');
         
         this.mode = 'pen'; 
         this.penSize = 2;
@@ -44,7 +51,6 @@ class CanvasComponent {
         const rect = this.canvas.getBoundingClientRect();
         const scaleX = this.canvas.width / rect.width;
         const scaleY = this.canvas.height / rect.height;
-        
         return {
             x: (e.clientX - rect.left) * scaleX,
             y: (e.clientY - rect.top) * scaleY
@@ -53,13 +59,24 @@ class CanvasComponent {
 
     bindEvents() {
         const startPosition = (e) => {
-            if (!PalmRejection.isValidInput(e)) return;
-            
-            // Abort drawing if a second finger touches (user is trying to pinch-zoom)
+            // Abort drawing if a second finger touches (prevents stray marks while zooming)
             if (e.pointerType === 'touch' && !e.isPrimary) {
                 this.isDrawing = false;
+                this.isPanning = false;
                 return;
             }
+
+            // Custom Pan Detection: Strict Mode + Finger OR Middle Mouse button
+            if ((PalmRejection.strictPenMode && e.pointerType === 'touch') || e.button === 1) {
+                this.isPanning = true;
+                this.lastPanPoint = { x: e.clientX, y: e.clientY };
+                this.activePointerId = e.pointerId;
+                this.canvas.setPointerCapture(e.pointerId);
+                return;
+            }
+
+            // Normal Pen Drawing
+            if (!PalmRejection.isValidInput(e)) return;
             
             this.activePointerId = e.pointerId;
             this.isDrawing = true;
@@ -70,19 +87,29 @@ class CanvasComponent {
             
             this.ctx.beginPath();
             this.ctx.moveTo(currentCoords.x, currentCoords.y);
-            
             this.ctx.lineWidth = this.mode === 'eraser' ? this.eraserSize : this.penSize;
             this.ctx.lineCap = 'round';
             this.ctx.lineJoin = 'round';
             this.ctx.strokeStyle = this.mode === 'eraser' ? '#ffffff' : this.penColor;
         };
 
-        const draw = (e) => {
-            if (!this.isDrawing || e.pointerId !== this.activePointerId) return;
-            if (!PalmRejection.isValidInput(e)) return;
+        const move = (e) => {
+            if (e.pointerId !== this.activePointerId) return;
+
+            // Handle Manual Smooth Panning
+            if (this.isPanning) {
+                const dx = e.clientX - this.lastPanPoint.x;
+                const dy = e.clientY - this.lastPanPoint.y;
+                this.scrollArea.scrollLeft -= dx;
+                this.scrollArea.scrollTop -= dy;
+                this.lastPanPoint = { x: e.clientX, y: e.clientY };
+                return;
+            }
+
+            // Handle Smooth Drawing Math
+            if (!this.isDrawing || !PalmRejection.isValidInput(e)) return;
             
             const currentPoint = this.getScaledCoordinates(e);
-            
             const midPoint = {
                 x: (this.lastPoint.x + currentPoint.x) / 2,
                 y: (this.lastPoint.y + currentPoint.y) / 2
@@ -93,27 +120,23 @@ class CanvasComponent {
             
             this.ctx.beginPath();
             this.ctx.moveTo(midPoint.x, midPoint.y);
-
             this.lastPoint = currentPoint;
         };
         
         const endPosition = (e) => {
             if (e.pointerId === this.activePointerId) {
                 this.isDrawing = false;
-                this.lastPoint = null;
+                this.isPanning = false;
+                this.lastPanPoint = null;
                 this.activePointerId = null;
                 this.canvas.releasePointerCapture(e.pointerId);
             }
         };
 
         this.canvas.addEventListener('pointerdown', startPosition);
-        this.canvas.addEventListener('pointermove', draw);
+        this.canvas.addEventListener('pointermove', move);
         this.canvas.addEventListener('pointerup', endPosition);
         this.canvas.addEventListener('pointercancel', endPosition);
         this.canvas.addEventListener('pointerout', endPosition);
-    }
-
-    setTouchActionBehavior(strictPenMode) {
-        this.canvas.style.touchAction = strictPenMode ? 'pan-x pan-y' : 'none';
     }
 }

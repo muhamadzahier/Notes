@@ -9,7 +9,6 @@
     --zoom-level: 1; 
 }
 
-/* 100dvh prevents clipping on tablets and phones when rotating */
 body { 
     font-family: system-ui, -apple-system, sans-serif; 
     margin: 0; 
@@ -64,30 +63,14 @@ button:hover { background: var(--bg-color); }
     box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 50; align-items: center;
 }
 
-.toolbar-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    gap: 0.5rem;
-}
-
-.section-label {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: #a1a1aa;
-    margin-bottom: 0.25rem;
-    letter-spacing: 0.05em;
-}
-
+.toolbar-section { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 0.5rem; }
+.section-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; color: #a1a1aa; margin-bottom: 0.25rem; letter-spacing: 0.05em; }
 .toolbar-divider { width: 100%; height: 1px; background: var(--border-color); margin: 0.25rem 0; }
 .tool-group { position: relative; width: 100%; }
 .float-tool-btn { width: 100%; padding: 0.75rem 0.5rem; border-radius: 0.5rem; text-align: center; border: 1px solid transparent; font-size: 0.8rem;}
 .float-tool-btn.active { background: var(--border-color); border-color: #d4d4d8; }
 #zoom-level-display { font-size: 0.75rem; font-weight: 600; color: #666; margin: 0.25rem 0; }
 
-/* Tool Size Popout */
 .tool-popout {
     position: absolute; left: calc(100% + 15px); top: 50%; transform: translateY(-50%) translateX(-10px);
     background: var(--canvas-bg); border: 1px solid var(--border-color); padding: 0.75rem 1.25rem;
@@ -95,24 +78,16 @@ button:hover { background: var(--bg-color); }
     transition: all 0.2s ease; display: flex; align-items: center; white-space: nowrap;
 }
 
-/* Vertical specific styling for the popout */
-.vertical-popout {
-    flex-direction: column;
-    height: 160px;
-    justify-content: space-between;
-    padding: 1rem 0.75rem;
-}
-
+.vertical-popout { flex-direction: column; height: 160px; justify-content: space-between; padding: 1rem 0.75rem; }
 .tool-group:hover .tool-popout, .tool-group:focus-within .tool-popout { opacity: 1; pointer-events: auto; transform: translateY(-50%) translateX(0); }
 .tool-popout label { font-size: 0.75rem; font-weight: 600; }
 
-/* Native Vertical Range Slider Styling */
 input[type="range"][orient="vertical"] {
-    -webkit-appearance: slider-vertical; /* Required for Chrome/Safari/Edge */
+    -webkit-appearance: slider-vertical;
     appearance: slider-vertical;
-    writing-mode: bt-lr; /* required for older standard compliance */
+    writing-mode: bt-lr;
     width: 8px;
-    height: 120px; /* Force height of slider */
+    height: 120px;
     margin-top: 0.5rem;
     cursor: ns-resize;
 }
@@ -139,27 +114,38 @@ input[type="range"][orient="vertical"] {
 .checkbox-group { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
 
 /* Workspace Area */
-.editor-main { flex: 1; padding: 2rem; overflow: auto; background: var(--bg-color); scroll-behavior: smooth; }
-#pages-container { transition: all 0.3s ease; }
+.editor-main { flex: 1; overflow: auto; background: var(--bg-color); }
 
-.layout-vertical { display: flex; flex-direction: column; align-items: center; gap: calc(3rem * var(--zoom-level)); }
-.layout-horizontal { display: flex; flex-direction: row; align-items: flex-start; gap: calc(3rem * var(--zoom-level)); width: max-content; padding-left: 6rem; padding-right: 3rem; }
-.layout-side-by-side { display: grid; grid-template-columns: repeat(2, 1fr); gap: calc(3rem * var(--zoom-level)); justify-items: center; padding-left: 5rem;}
+/* Container that safely stretches without clipping limits */
+#pages-container { 
+    min-width: 100%; 
+    width: max-content; 
+    padding: 3rem; 
+    display: flex; 
+    transition: none; 
+}
 
-/* Responsive A4 Wrapper */
+/* Layouts */
+.layout-vertical { flex-direction: column; gap: calc(3rem * var(--zoom-level)); align-items: center; }
+.layout-horizontal { flex-direction: row; gap: calc(3rem * var(--zoom-level)); padding-left: 8rem !important; }
+.layout-side-by-side { display: grid; grid-template-columns: repeat(2, 1fr); gap: calc(3rem * var(--zoom-level)); padding-left: 7rem !important; }
+
+/* Responsive A4 Wrapper using hard boundaries for perfect scrolling limits */
 .a4-wrapper {
     position: relative; 
-    width: calc(100% * var(--zoom-level)); 
-    max-width: calc(794px * var(--zoom-level)); 
-    aspect-ratio: 794 / 1123;
+    width: calc(794px * var(--zoom-level)); 
+    height: calc(1123px * var(--zoom-level)); 
     background: var(--canvas-bg); 
     box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
     transition: outline 0.2s ease; 
     outline: 2px solid transparent;
+    flex-shrink: 0;
 }
+.layout-vertical .a4-wrapper { margin: 0 auto; } /* Centering inside flex */
+
 .a4-wrapper.active { outline: 3px solid var(--active-outline); }
 .page-number { position: absolute; bottom: -25px; width: 100%; text-align: center; font-size: 0.875rem; color: #666; }
-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; }
 
 #notes-list { list-style: none; padding: 2rem; margin: 0; display: grid; gap: 2rem; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
 .note-card { background: var(--canvas-bg); border: 1px solid var(--border-color); cursor: pointer; height: 280px; background-size: contain; background-repeat: no-repeat; background-position: top center; display: flex; flex-direction: column; justify-content: flex-end; border-radius: 0.5rem; overflow: hidden; }
@@ -172,11 +158,9 @@ canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor:
     h1 { font-size: 1rem; }
     button { padding: 0.5rem 0.75rem; font-size: 0.8rem; }
     
-    .editor-main { padding: 1rem; padding-bottom: 120px; }
-    
-    .layout-horizontal, .layout-side-by-side { display: flex; flex-direction: column; align-items: center; width: 100%; padding-left: 0; padding-right: 0; }
+    .editor-main { padding-bottom: 120px; }
+    .layout-horizontal, .layout-side-by-side { flex-direction: column; align-items: center; width: 100%; padding-left: 2rem !important; display: flex; }
 
-    /* Move Toolbar to Bottom Horizontal layout */
     .floating-toolbar {
         top: auto; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
         flex-direction: row; width: 95%; max-width: 500px;
@@ -184,11 +168,10 @@ canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor:
     }
     
     .toolbar-section { flex-direction: row; width: auto; gap: 0.5rem; align-items: center; }
-    .section-label { display: none; } /* Hide labels on mobile to save space */
+    .section-label { display: none; }
     .toolbar-divider { width: 1px; height: 24px; margin: 0 0.25rem; }
     .color-palette { flex-direction: row; gap: 0.5rem; margin-top: 0; }
     
-    /* Make the vertical popouts slide UP instead of RIGHT on mobile */
     .tool-popout { top: auto; bottom: calc(100% + 15px); left: 50%; transform: translateX(-50%) translateY(10px); }
     .tool-group:hover .tool-popout, .tool-group:focus-within .tool-popout { transform: translateX(-50%) translateY(0); }
 }

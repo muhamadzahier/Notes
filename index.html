@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Home Screen: Note Library -->
     <div id="home-screen" class="screen active">
         <header>
             <h1>Workspace</h1>
@@ -18,7 +17,6 @@
         </main>
     </div>
 
-    <!-- Editor Screen: Multi-Page Canvas -->
     <div id="editor-screen" class="screen">
         <header class="editor-header">
             <button id="btn-back">Library</button>
@@ -30,10 +28,7 @@
         
         <div class="editor-body">
             
-            <!-- Floating Navigation Toolbar -->
             <div id="floating-toolbar" class="floating-toolbar">
-                
-                <!-- 1. VIEW SECTION (Zoom controls separated at the top) -->
                 <div class="toolbar-section">
                     <span class="section-label">View</span>
                     <button id="btn-zoom-in" class="float-tool-btn">+</button>
@@ -43,13 +38,10 @@
 
                 <div class="toolbar-divider"></div>
 
-                <!-- 2. DRAW SECTION (Tools and Colors) -->
                 <div class="toolbar-section">
                     <span class="section-label">Draw</span>
-                    
                     <div class="tool-group">
                         <button id="btn-pen" class="float-tool-btn active">Pen</button>
-                        <!-- Vertical Popout for Size -->
                         <div class="tool-popout vertical-popout">
                             <label for="pen-size-slider">Size</label>
                             <input type="range" id="pen-size-slider" min="1" max="20" value="2" orient="vertical">
@@ -58,27 +50,21 @@
                     
                     <div class="tool-group">
                         <button id="btn-eraser" class="float-tool-btn">Eraser</button>
-                        <!-- Vertical Popout for Size -->
                         <div class="tool-popout vertical-popout">
                             <label for="eraser-size-slider">Size</label>
                             <input type="range" id="eraser-size-slider" min="10" max="100" value="35" orient="vertical">
                         </div>
                     </div>
                     
-                    <!-- Dynamic Color Palette -->
                     <div id="color-palette" class="color-palette"></div>
                 </div>
-
             </div>
 
-            <!-- Scrollable Area for Pages -->
             <main class="editor-main" id="pages-scroll-area">
                 <div id="pages-container" class="layout-vertical">
-                    <!-- Canvases injected dynamically via JS -->
                 </div>
             </main>
 
-            <!-- Settings Sidebar -->
             <aside id="layout-sidebar" class="sidebar">
                 <div class="sidebar-header">
                     <h3>Document Settings</h3>
@@ -113,7 +99,6 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="lib/db.js"></script>
     <script src="lib/palm.js"></script>
     <script src="cmp/canvas.js"></script>
